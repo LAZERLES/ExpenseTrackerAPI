@@ -4,6 +4,7 @@ const cors = require("cors");
 const sequelize = require("./Data/DB.js");
 const User = require("./Models/User.js");
 const Wallet = require("./Models/Wallet.js");
+const UserRoute = require('./Routes/User.Route.js');
 require("dotenv").config();
 
 const app = express();
@@ -19,9 +20,7 @@ User.hasOne(Wallet, {foreignKey: 'user_id'});
 Wallet.belongsTo(User, {foreignKey: 'user_id'}, {onDelete: 'CASCADE'});
 
 // routes
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
-});
+app.use("/api/users",UserRoute);
 
 const LISTEN_PORT = process.env.NODE_ENV === "production" ? PORT : 3000;
 
@@ -30,7 +29,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Database connection has been established successfully.");
-    return sequelize.sync({ force: true });
+    return sequelize.sync({ force: false });
   })
   .then(() => {
     app.listen(LISTEN_PORT, () => {
