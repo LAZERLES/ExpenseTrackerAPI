@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const sequelize = require("./Data/DB.js");
 const User = require("./Models/User.js");
+const Wallet = require("./Models/Wallet.js");
 require("dotenv").config();
 
 const app = express();
@@ -12,6 +13,10 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
+// Associate models
+User.hasOne(Wallet, {foreignKey: 'user_id'});
+Wallet.belongsTo(User, {foreignKey: 'user_id'}, {onDelete: 'CASCADE'});
 
 // routes
 app.get("/", (req, res) => {
