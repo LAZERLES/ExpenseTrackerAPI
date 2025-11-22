@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const sequelize = require("./Data/DB.js");
+const User = require("./Models/User.js");
 require("dotenv").config();
 
 const app = express();
@@ -24,7 +25,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Database connection has been established successfully.");
-    return sequelize.sync();
+    return sequelize.sync({ force: true });
   })
   .then(() => {
     app.listen(LISTEN_PORT, () => {
