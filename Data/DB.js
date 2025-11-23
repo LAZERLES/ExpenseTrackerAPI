@@ -13,6 +13,7 @@ if (process.env.NODE_ENV !== "production") {
       host: process.env.DB_HOST,
       dialect: process.env.DB_DIALECT,
       logging: true,
+      timezone: "+07:00",
     }
   );
 } else {

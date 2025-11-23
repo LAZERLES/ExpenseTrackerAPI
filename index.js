@@ -3,8 +3,10 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const sequelize = require("./Data/DB.js");
 const User = require("./Models/User.js");
-const Wallet = require("./Models/Wallet.js");
+const Transaction = require("./Models/Transaction.js");
+const Category = require("./Models/Category.js");
 const UserRoute = require('./Routes/User.Route.js');
+const ExpenseRoute = require('./Routes/Transaction.Route.js');
 require("dotenv").config();
 
 const app = express();
@@ -16,11 +18,18 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Associate models
-User.hasOne(Wallet, {foreignKey: 'user_id'});
-Wallet.belongsTo(User, {foreignKey: 'user_id'}, {onDelete: 'CASCADE'});
+// Transaction belongs to User
+Transaction.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Transaction, { foreignKey: 'user_id' });
+
+// Transaction belongs to Category
+Transaction.belongsTo(Category, { foreignKey: 'category_id' });
+Category.hasMany(Transaction, { foreignKey: 'category_id' });
+
 
 // routes
 app.use("/api/users",UserRoute);
+app.use("/api/expenses",ExpenseRoute);
 
 const LISTEN_PORT = process.env.NODE_ENV === "production" ? PORT : 3000;
 

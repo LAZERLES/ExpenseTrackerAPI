@@ -1,12 +1,10 @@
 const User = require("../Models/User.js");
-const Wallet = require("../Models/Wallet.js");
 const bcrypt = require("bcrypt");
-const sequelize = require("../Data/DB.js");
+const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   try {
-    await sequelize.transaction(async (t) => {
-      const { email, username, password } = req.body;
+    const { email, username, password } = req.body;
 
       // validation
       if (!email || !username || !password) {
@@ -26,15 +24,11 @@ const createUser = async (req, res) => {
       // create user
       const newUser = await User.create(
         { email, username, password: hashedPassword },
-        { transaction: t }
       );
-
-      await Wallet.create({ user_id: newUser.id }, { transaction: t });
 
       return res
         .status(201)
-        .json({ message: "User created successfully.",  });
-    });
+        .json({ message: "User created successfully.", userId: newUser.id, email: newUser.email});
   } catch (error) {
     res.status(500).json({ message: "Server error.", error: error.message });
   }
@@ -70,11 +64,7 @@ const loginUser = async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "none",
-      maxAge: 3600000, // 1 hour
-    });
+    res.cookie("token", token, { httpOnly: true, maxAge: 3600000 });
 
     res.status(200).json({
       message: "Login successful",
