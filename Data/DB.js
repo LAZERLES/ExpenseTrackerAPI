@@ -6,12 +6,12 @@ let sequelize;
 
 if (process.env.NODE_ENV !== "production") {
   sequelize = new Sequelize(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
+    'ext_db',
+    'root',
+    '',
     {
-      host: process.env.DB_HOST,
-      dialect: process.env.DB_DIALECT,
+      host: 'localhost',
+      dialect: "mysql",
       logging: true,
       timezone: "+07:00",
     }

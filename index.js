@@ -7,6 +7,7 @@ const Transaction = require("./Models/Transaction.js");
 const Category = require("./Models/Category.js");
 const UserRoute = require('./Routes/User.Route.js');
 const ExpenseRoute = require('./Routes/Transaction.Route.js');
+const CategoryRoute = require('./Routes/Category.Route.js');
 require("dotenv").config();
 
 const app = express();
@@ -30,6 +31,13 @@ Category.hasMany(Transaction, { foreignKey: 'category_id' });
 // routes
 app.use("/api/users",UserRoute);
 app.use("/api/expenses",ExpenseRoute);
+app.use("/api/categories",CategoryRoute);
+
+// Health check
+app.get('/', (req, res) => {
+  res.json({ message: 'Expense Tracker API is running!' });
+});
+
 
 const LISTEN_PORT = process.env.NODE_ENV === "production" ? PORT : 3000;
 
