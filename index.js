@@ -6,8 +6,10 @@ const User = require("./Models/User.js");
 const Transaction = require("./Models/Transaction.js");
 const Category = require("./Models/Category.js");
 const UserRoute = require('./Routes/User.Route.js');
-const ExpenseRoute = require('./Routes/Transaction.Route.js');
+const transactionRoute = require('./Routes/Transaction.Route.js');
 const CategoryRoute = require('./Routes/Category.Route.js');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./Config/swagger.js');
 require("dotenv").config();
 
 const app = express();
@@ -17,6 +19,18 @@ const PORT = process.env.PORT;
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
+// Swagger DOCS
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Expense Tracker API Docs'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs,json', (req,res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+})
 
 // Associate models
 // Transaction belongs to User
@@ -29,8 +43,8 @@ Category.hasMany(Transaction, { foreignKey: 'category_id' });
 
 
 // routes
-app.use("/api/users",UserRoute);
-app.use("/api/expenses",ExpenseRoute);
+app.use("/api/auth",UserRoute);
+app.use("/api/transactions",transactionRoute);
 app.use("/api/categories",CategoryRoute);
 
 // Health check

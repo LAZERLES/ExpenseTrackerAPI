@@ -4,10 +4,14 @@ const getCategories = async (req, res) => {
   try {
     const categories = await Category.findAll({
       order: [
+        ["id", "ASC"],
         ["type", "ASC"],
-        ["name", "ASC"],
       ],
     });
+
+    if (!categories) {
+      return res.status(404).json({ message: "Categories not found" });
+    }
 
     return res.status(200).json({ 
       categories: categories,
@@ -34,6 +38,10 @@ const getCategoriesByType = async (req, res) => {
       where: {type: type},
       order: [["name", "ASC"]],
     });
+
+    if (!categories) {
+      return res.status(404).json({ message: "Categories not found" });
+    }
 
     return res.status(200).json({
       categories: categories,

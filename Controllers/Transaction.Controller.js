@@ -1,6 +1,7 @@
 const Transaction = require("../Models/Transaction.js");
 const Category = require("../Models/Category.js");
 const sequelize = require("../Data/DB.js");
+const { Op } = require("sequelize");
 
 // Create Expense
 const createTransaction = async (req, res) => {
@@ -28,6 +29,7 @@ const createTransaction = async (req, res) => {
 
     // Validate category exists
     const category = await Category.findByPk(category_id);
+
     if (!category) {
       return res.status(404).json({ message: "Category not found" });
     }
@@ -42,7 +44,7 @@ const createTransaction = async (req, res) => {
       transaction_date,
     });
 
-    return res.status(201).json({ transaction });
+    return res.status(201).json({ message: "Transaction created successfully",transaction });
   } catch (error) {
     return res
       .status(500)
@@ -127,9 +129,22 @@ const updateTransaction = async (req, res) => {
       category_id: category_id || transaction.category_id,
       transaction_date: transaction_date || transaction.transaction_date,
     });
+
+    // Save transaction
     await transaction.save();
 
-    return res.status(200).json({ transaction });
+    const updatedTransaction = await Transaction.findOne({
+      where: {
+        id: transactionId,
+        user_id: userId,
+      },
+      include: [{
+        model: Category,
+        attributes: ['id', 'name', 'type', 'icon', 'color']
+      }],
+    });
+
+    return res.status(200).json({ message: "Transaction updated successfully",transaction: updatedTransaction });
   } catch (error) {
     return res
       .status(500)
@@ -170,6 +185,8 @@ const getBalance = async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Calculate balance
+    // Income - Expense by if type is income value is positive else negative and sum it up on balance
     const result = await Transaction.findOne({
       attributes: [
         [
@@ -183,10 +200,12 @@ const getBalance = async (req, res) => {
         ],
       ],
       where: { user_id: userId },
-      raw: true,
+      raw: true,// for getting plain object
     });
 
+    // If no transactions, balance is 0
     const balance = result.balance || 0;
+
 
     return res.status(200).json({
       balance: parseFloat(balance),
@@ -203,14 +222,29 @@ const getBalance = async (req, res) => {
 const getSummary = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { start_date, end_date } =req.query;
+
+    const where = { user_id: userId };
+
+    // Add date filtering if provided
+    if (start_date || end_date) {  // 👈 ADD THIS BLOCK
+      where.transaction_date = {};
+      if (start_date) {
+        where.transaction_date[Op.gte] = start_date;
+      }
+      if (end_date) {
+        where.transaction_date[Op.lte] = end_date;
+      }
+    }
 
     // Get totals by type
+    // sum amount group by type
     const totals = await Transaction.findAll({
       attributes: [
         'type',
         [sequelize.fn('SUM', sequelize.col('amount')), 'total_amount']
       ],
-      where: { user_id: userId },
+      where,
       group: ['type'],
       raw: true
     });
@@ -223,7 +257,7 @@ const getSummary = async (req, res) => {
         [sequelize.fn('SUM', sequelize.col('amount')), 'total_amount'],
         [sequelize.fn('COUNT', sequelize.col('Transaction.id')), 'count']
       ],
-      where: { user_id: userId },
+      where,
       include: [{
         model: Category,
         attributes: ['name', 'icon', 'color']
@@ -232,6 +266,7 @@ const getSummary = async (req, res) => {
       order: [[sequelize.fn('SUM', sequelize.col('amount')), 'DESC']]
     });
 
+    // access in to totals to get income and expense amounts
      const incomeTotal = totals.find(t => t.type === 'income')?.total_amount || 0;
     const expenseTotal = totals.find(t => t.type === 'expense')?.total_amount || 0;  
 
