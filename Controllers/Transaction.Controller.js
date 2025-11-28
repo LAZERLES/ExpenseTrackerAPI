@@ -234,63 +234,68 @@ const getSummary = async (req, res) => {
 
     const where = { user_id: userId };
 
-    // Date filters
     if (start_date || end_date) {
       where.transaction_date = {};
       if (start_date) where.transaction_date[Op.gte] = start_date;
       if (end_date) where.transaction_date[Op.lte] = end_date;
     }
 
-    // 🔹 Total income & expense grouped by type
+    // --- TOTALS ---
     const totals = await Transaction.findAll({
       attributes: [
-        'type',
-        [sequelize.fn('SUM', sequelize.col('Transaction.amount')), 'total_amount']
+        [sequelize.col("Transaction.type"), "type"],
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "total_amount"],
       ],
       where,
-      group: ['Transaction.type'],
-      raw: true
+      group: ["Transaction.type"], 
+      raw: true,
     });
 
-    // 🔹 Breakdown by category
+    // --- CATEGORY BREAKDOWN ---
     const byCategory = await Transaction.findAll({
       attributes: [
-        'type',
-        'category_id',
-        [sequelize.fn('SUM', sequelize.col('Transaction.amount')), 'total_amount'],
-        [sequelize.fn('COUNT', sequelize.col('Transaction.id')), 'count']
+        [sequelize.col("Transaction.type"), "type"],
+        [sequelize.col("Transaction.category_id"), "category_id"],
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "total_amount"],
+        [sequelize.fn("COUNT", sequelize.col("Transaction.id")), "count"],
       ],
       where,
-      include: [{
-        model: Category,
-        attributes: ['id', 'name', 'icon', 'color']
-      }],
-      group: [
-        'Transaction.type',       
-        'Transaction.category_id',
-        'Category.id'
+      include: [
+        {
+          model: Category,
+          attributes: ["id", "name", "icon", "color"],
+        },
       ],
-      order: [[sequelize.fn('SUM', sequelize.col('Transaction.amount')), 'DESC']]
+      group: [
+        "Transaction.type",        
+        "Transaction.category_id", 
+        "Category.id",             
+      ],
+      order: [
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "DESC"],
+      ],
     });
 
-    const incomeTotal = totals.find(t => t.type === 'income')?.total_amount || 0;
-    const expenseTotal = totals.find(t => t.type === 'expense')?.total_amount || 0;
+    const incomeTotal =
+      totals.find((t) => t.type === "income")?.total_amount || 0;
+    const expenseTotal =
+      totals.find((t) => t.type === "expense")?.total_amount || 0;
 
     return res.status(200).json({
       total_income: parseFloat(incomeTotal),
       total_expense: parseFloat(expenseTotal),
       balance: parseFloat(incomeTotal) - parseFloat(expenseTotal),
-      by_category: byCategory
+      by_category: byCategory,
     });
-
   } catch (error) {
-    console.error('Get summary error:', error);
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: error.message 
+    console.error("Get summary error:", error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
     });
   }
 };
+
 
 
 module.exports = {
