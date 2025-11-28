@@ -20,7 +20,7 @@ const options = {
         description: 'Development server'
       },
       {
-        url: 'https://your-api-url.onrender.com',  // Update when deployed
+        url: 'https://expensetrackerapi-zlhw.onrender.com',  // Update when deployed
         description: 'Production server'
       }
     ],
