@@ -67,9 +67,6 @@ const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ id: userData.id }, process.env.JWT_SECRET, {
-      httpOnly: true,
-      maxAge: 3600000,
-      sameSite: "none",
       expiresIn: "1h",
     });
 
