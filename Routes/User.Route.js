@@ -1,5 +1,6 @@
 const express = require("express");
-const { createUser, loginUser, logoutUser } = require("../Controllers/User.Controller.js");
+const { createUser, loginUser, logoutUser, getMe } = require("../Controllers/User.Controller.js");
+const { authenticate } = require("../Auth/Auth.js");
 
 const Router = express.Router();
 
@@ -154,6 +155,9 @@ Router.post("/register", createUser);
  *         description: Internal server error
  */
 Router.post("/login", loginUser);
+
+
+Router.get("/me",authenticate, getMe);
 
 /**
  * @swagger

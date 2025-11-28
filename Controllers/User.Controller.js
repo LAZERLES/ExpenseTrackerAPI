@@ -36,28 +36,34 @@ const createUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { identifier, password } = req.body;
 
     // user can login with email or username
-    if (!password || (!email && !username)) {
+    if (!password || (!identifier)) {
       return res
         .status(400)
         .json({ message: "Email/Username and password are required." });
     }
 
-    // user can login with either email or username
-    const identifier = email ? { email } : { username };
+    let query = {};
+
+    // Check if email or username is provided
+    if (identifier.includes("@")) {
+      query.email = identifier; // login via email
+    } else {
+      query.username = identifier; // login via username
+    }
 
     // Check if user exists
-    const userData = await User.findOne({ where: identifier });
+    const userData = await User.findOne({ where: query });
     if (!userData) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Verify password
     const isPasswordMatch = await bcrypt.compare(password, userData.password);
     if (!isPasswordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign({ id: userData.id }, process.env.JWT_SECRET, {
@@ -78,7 +84,34 @@ const loginUser = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Internal Server Error", details: error.message });
+      .json({ error: "Internal Server Error", deatils: error.message });
+  }
+};
+
+// Get current user (verify token)
+const getMe = async (req, res) => {
+  try {
+    // req.user is set by authenticateToken middleware
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'email', 'created_at']
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      message: "Server error", 
+      error: error.message 
+    });
   }
 };
 
@@ -91,4 +124,4 @@ const logoutUser = async (req, res) => {
   }
 }
 
-module.exports = { createUser, loginUser, logoutUser };
+module.exports = { createUser, loginUser, getMe, logoutUser };
