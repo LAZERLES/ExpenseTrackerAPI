@@ -44,7 +44,9 @@ const createTransaction = async (req, res) => {
       transaction_date,
     });
 
-    return res.status(201).json({ message: "Transaction created successfully",transaction });
+    return res
+      .status(201)
+      .json({ message: "Transaction created successfully", transaction });
   } catch (error) {
     return res
       .status(500)
@@ -138,13 +140,20 @@ const updateTransaction = async (req, res) => {
         id: transactionId,
         user_id: userId,
       },
-      include: [{
-        model: Category,
-        attributes: ['id', 'name', 'type', 'icon', 'color']
-      }],
+      include: [
+        {
+          model: Category,
+          attributes: ["id", "name", "type", "icon", "color"],
+        },
+      ],
     });
 
-    return res.status(200).json({ message: "Transaction updated successfully",transaction: updatedTransaction });
+    return res
+      .status(200)
+      .json({
+        message: "Transaction updated successfully",
+        transaction: updatedTransaction,
+      });
   } catch (error) {
     return res
       .status(500)
@@ -200,12 +209,11 @@ const getBalance = async (req, res) => {
         ],
       ],
       where: { user_id: userId },
-      raw: true,// for getting plain object
+      raw: true, // for getting plain object
     });
 
     // If no transactions, balance is 0
     const balance = result.balance || 0;
-
 
     return res.status(200).json({
       balance: parseFloat(balance),
@@ -222,69 +230,73 @@ const getBalance = async (req, res) => {
 const getSummary = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { start_date, end_date } =req.query;
+    const { start_date, end_date } = req.query;
 
     const where = { user_id: userId };
 
-    // Add date filtering if provided
-    if (start_date || end_date) {  // 👈 ADD THIS BLOCK
+    if (start_date || end_date) {
       where.transaction_date = {};
-      if (start_date) {
-        where.transaction_date[Op.gte] = start_date;
-      }
-      if (end_date) {
-        where.transaction_date[Op.lte] = end_date;
-      }
+      if (start_date) where.transaction_date[Op.gte] = start_date;
+      if (end_date) where.transaction_date[Op.lte] = end_date;
     }
 
-    // Get totals by type
-    // sum amount group by type
+    // --- TOTALS ---
     const totals = await Transaction.findAll({
       attributes: [
-        'type',
-        [sequelize.fn('SUM', sequelize.col('amount')), 'total_amount']
+        [sequelize.col("Transaction.type"), "type"],
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "total_amount"],
       ],
       where,
-      group: ['type'],
-      raw: true
+      group: ["Transaction.type"], 
+      raw: true,
     });
 
-    // Get breakdown by category
+    // --- CATEGORY BREAKDOWN ---
     const byCategory = await Transaction.findAll({
       attributes: [
-        'type',
-        'category_id',
-        [sequelize.fn('SUM', sequelize.col('amount')), 'total_amount'],
-        [sequelize.fn('COUNT', sequelize.col('Transaction.id')), 'count']
+        [sequelize.col("Transaction.type"), "type"],
+        [sequelize.col("Transaction.category_id"), "category_id"],
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "total_amount"],
+        [sequelize.fn("COUNT", sequelize.col("Transaction.id")), "count"],
       ],
       where,
-      include: [{
-        model: Category,
-        attributes: ['name', 'icon', 'color']
-      }],
-      group: ['type', 'category_id', 'Category.id'],
-      order: [[sequelize.fn('SUM', sequelize.col('amount')), 'DESC']]
+      include: [
+        {
+          model: Category,
+          attributes: ["id", "name", "icon", "color"],
+        },
+      ],
+      group: [
+        "Transaction.type",        
+        "Transaction.category_id", 
+        "Category.id",             
+      ],
+      order: [
+        [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "DESC"],
+      ],
     });
 
-    // access in to totals to get income and expense amounts
-     const incomeTotal = totals.find(t => t.type === 'income')?.total_amount || 0;
-    const expenseTotal = totals.find(t => t.type === 'expense')?.total_amount || 0;  
+    const incomeTotal =
+      totals.find((t) => t.type === "income")?.total_amount || 0;
+    const expenseTotal =
+      totals.find((t) => t.type === "expense")?.total_amount || 0;
 
     return res.status(200).json({
       total_income: parseFloat(incomeTotal),
       total_expense: parseFloat(expenseTotal),
       balance: parseFloat(incomeTotal) - parseFloat(expenseTotal),
-      by_category: byCategory
+      by_category: byCategory,
     });
-
   } catch (error) {
-    console.error('Get summary error:', error);
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: error.message 
+    console.error("Get summary error:", error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
     });
   }
 };
+
+
 
 module.exports = {
   createTransaction,
@@ -293,5 +305,5 @@ module.exports = {
   updateTransaction,
   deleteTransaction,
   getBalance,
-  getSummary
+  getSummary,
 };
