@@ -18,7 +18,7 @@ const PORT = process.env.PORT;
 // Middleware to parse JSON bodies
 app.use(cors(
   {
-    origin: "https://react-expenseapp.vercel.app/",
+    origin: "https://react-expenseapp.vercel.app",
     credentials: true
   }
 ));
