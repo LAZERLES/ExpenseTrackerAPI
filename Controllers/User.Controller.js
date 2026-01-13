@@ -4,10 +4,10 @@ const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, firstName, lastName, password } = req.body;
 
     // validation
-    if (!email || !username || !password) {
+    if (!email || !firstName || !lastName || !password) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -23,8 +23,9 @@ const createUser = async (req, res) => {
 
     // create user
     const newUser = await User.create({
+      firstName,
+      lastName,
       email,
-      username,
       password: hashedPassword,
     });
 
@@ -38,26 +39,26 @@ const createUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const { email, password } = req.body;
 
-    // user can login with email or username
-    if (!password || !identifier) {
+    // check if email or password is provided
+    if (!password || !email) {
       return res
         .status(400)
-        .json({ message: "Email/Username and password are required." });
+        .json({ message: "Email or password are required." });
     }
 
-    let query = {};
+    // let query = {};
 
-    // Check if email or username is provided
-    if (identifier.includes("@")) {
-      query.email = identifier; // login via email
-    } else {
-      query.username = identifier; // login via username
-    }
+    // // Check if email or username is provided
+    // if (identifier.includes("@")) {
+    //   query.email = identifier; // login via email
+    // } else {
+    //   query.username = identifier; // login via username
+    // }
 
     // Check if user exists
-    const userData = await User.findOne({ where: query });
+    const userData = await User.findOne({ where: {email} });
     if (!userData) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -74,8 +75,8 @@ const loginUser = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 3600000,
     });
 
@@ -100,7 +101,7 @@ const getMe = async (req, res) => {
   try {
     // req.user is set by authenticateToken middleware
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "username", "email", "created_at"],
+      attributes: ["id", "firstName", "lastName", "email", "createdAt", "updatedAt"],
     });
 
     if (!user) {

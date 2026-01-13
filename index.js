@@ -18,7 +18,8 @@ const PORT = process.env.PORT;
 // Middleware to parse JSON bodies
 app.use(cors(
   {
-    origin: "https://react-expenseapp.vercel.app",
+    // "https://react-expenseapp.vercel.app" ||
+    origin:  "http://localhost:5173",
     credentials: true
   }
 ));
@@ -39,12 +40,12 @@ app.get('/api-docs,json', (req,res) => {
 
 // Associate models
 // Transaction belongs to User
-Transaction.belongsTo(User, { foreignKey: 'user_id' });
-User.hasMany(Transaction, { foreignKey: 'user_id' });
+Transaction.belongsTo(User, { foreignKey: 'userId' });
+User.hasMany(Transaction, { foreignKey: 'userId' });
 
 // Transaction belongs to Category
-Transaction.belongsTo(Category, { foreignKey: 'category_id' });
-Category.hasMany(Transaction, { foreignKey: 'category_id' });
+Transaction.belongsTo(Category, { foreignKey: 'categoryId' });
+Category.hasMany(Transaction, { foreignKey: 'categoryId' });
 
 
 // routes

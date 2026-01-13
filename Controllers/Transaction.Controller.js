@@ -6,12 +6,12 @@ const { Op } = require("sequelize");
 // Create Expense
 const createTransaction = async (req, res) => {
   try {
-    const { title, amount, type, description, category_id, transaction_date } =
+    const { title, amount, type, description, categoryId, transactionDate } =
       req.body;
-    const user_id = req.user.id;
+    const userId = req.user.id;
 
     // Validation (YOU write this - you know how!)
-    if (!title || !amount || !type || !category_id || !transaction_date) {
+    if (!title || !amount || !type || !transactionDate) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -28,20 +28,20 @@ const createTransaction = async (req, res) => {
     }
 
     // Validate category exists
-    const category = await Category.findByPk(category_id);
+    // const category = await Category.findByPk(categoryId);
 
-    if (!category) {
-      return res.status(404).json({ message: "Category not found" });
-    }
+    // if (!category) {
+    //   return res.status(404).json({ message: "Category not found" });
+    // }
 
     const transaction = await Transaction.create({
       title,
       amount,
       type,
       description,
-      category_id,
-      user_id,
-      transaction_date,
+      categoryId,
+      userId,
+      transactionDate,
     });
 
     return res
@@ -59,9 +59,9 @@ const getTransactions = async (req, res) => {
     const userId = req.user.id;
 
     const transactions = await Transaction.findAll({
-      where: { user_id: userId },
+      where: { userId: userId },
       include: Category,
-      order: [["transaction_date", "DESC"]],
+      order: [["transactionDate", "DESC"]],
     });
 
     return res.status(200).json({
@@ -83,7 +83,7 @@ const getTransaction = async (req, res) => {
     const transaction = await Transaction.findOne({
       where: {
         id: transactionId,
-        user_id: userId,
+        userId: userId,
       },
       include: Category,
     });
@@ -103,7 +103,7 @@ const getTransaction = async (req, res) => {
 
 const updateTransaction = async (req, res) => {
   try {
-    const { title, amount, type, description, category_id, transaction_date } =
+    const { title, amount, type, description, categoryId, transactionDate } =
       req.body;
     const userId = req.user.id;
     const transactionId = req.params.id;
@@ -111,7 +111,7 @@ const updateTransaction = async (req, res) => {
     const transaction = await Transaction.findOne({
       where: {
         id: transactionId,
-        user_id: userId,
+        userId: userId,
       },
     });
 
@@ -128,8 +128,8 @@ const updateTransaction = async (req, res) => {
       type: type || transaction.type,
       description:
         description !== undefined ? description : transaction.description,
-      category_id: category_id || transaction.category_id,
-      transaction_date: transaction_date || transaction.transaction_date,
+      categoryId: categoryId || transaction.categoryId,
+      transactionDate: transactionDate || transaction.transactionDate,
     });
 
     // Save transaction
@@ -138,12 +138,12 @@ const updateTransaction = async (req, res) => {
     const updatedTransaction = await Transaction.findOne({
       where: {
         id: transactionId,
-        user_id: userId,
+        userId: userId,
       },
       include: [
         {
           model: Category,
-          attributes: ["id", "name", "type", "icon", "color"],
+          attributes: ["id", "name",],
         },
       ],
     });
@@ -169,7 +169,7 @@ const deleteTransaction = async (req, res) => {
     const transaction = await Transaction.findOne({
       where: {
         id: transactionId,
-        user_id: userId,
+        userId: userId,
       },
     });
 
@@ -208,7 +208,7 @@ const getBalance = async (req, res) => {
           "balance",
         ],
       ],
-      where: { user_id: userId },
+      where: { userId: userId },
       raw: true, // for getting plain object
     });
 
@@ -232,12 +232,12 @@ const getSummary = async (req, res) => {
     const userId = req.user.id;
     const { start_date, end_date } = req.query;
 
-    const where = { user_id: userId };
+    const where = { userId: userId };
 
     if (start_date || end_date) {
-      where.transaction_date = {};
-      if (start_date) where.transaction_date[Op.gte] = start_date;
-      if (end_date) where.transaction_date[Op.lte] = end_date;
+      where.transactionDate = {};
+      if (start_date) where.transactionDate[Op.gte] = start_date;
+      if (end_date) where.transactionDate[Op.lte] = end_date;
     }
 
     // --- TOTALS ---
@@ -255,7 +255,7 @@ const getSummary = async (req, res) => {
     const byCategory = await Transaction.findAll({
       attributes: [
         [sequelize.col("Transaction.type"), "type"],
-        [sequelize.col("Transaction.category_id"), "category_id"],
+        [sequelize.col("Transaction.categoryId"), "categoryId"],
         [sequelize.fn("SUM", sequelize.col("Transaction.amount")), "total_amount"],
         [sequelize.fn("COUNT", sequelize.col("Transaction.id")), "count"],
       ],
@@ -263,12 +263,12 @@ const getSummary = async (req, res) => {
       include: [
         {
           model: Category,
-          attributes: ["id", "name", "icon", "color"],
+          attributes: ["id", "name",],
         },
       ],
       group: [
         "Transaction.type",        
-        "Transaction.category_id", 
+        "Transaction.categoryId", 
         "Category.id",             
       ],
       order: [

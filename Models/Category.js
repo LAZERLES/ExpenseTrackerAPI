@@ -12,18 +12,6 @@ const Category = sequelize.define('Category', {
     allowNull: false,
     // unique: true
   },
-  type: {
-    type: DataTypes.ENUM('income', 'expense'),
-    allowNull: false
-  },
-  icon: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  color: {
-    type: DataTypes.STRING,
-    allowNull: true
-  }
 }, {
   tableName: 'categories',
   timestamps: true,

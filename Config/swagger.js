@@ -70,9 +70,9 @@ const options = {
             amount: { type: 'number', format: 'decimal', example: 150.00 },
             type: { type: 'string', enum: ['income', 'expense'], example: 'expense' },
             description: { type: 'string', example: 'Team lunch meeting' },
-            category_id: { type: 'integer', example: 1 },
-            user_id: { type: 'integer', example: 1 },
-            transaction_date: { type: 'string', format: 'date', example: '2024-11-23' },
+            categoryId: { type: 'integer', example: 1 },
+            userId: { type: 'integer', example: 1 },
+            transactionDate: { type: 'string', format: 'date', example: '2024-11-23' },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' },
             Category: { $ref: '#/components/schemas/Category' }

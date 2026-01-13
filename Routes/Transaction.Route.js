@@ -35,8 +35,8 @@ router.use(authenticate);
  *               - title
  *               - amount
  *               - type
- *               - category_id
- *               - transaction_date
+ *               - categoryId
+ *               - transactionDate
  *             properties:
  *               title:
  *                 type: string
@@ -57,11 +57,11 @@ router.use(authenticate);
  *                 type: string
  *                 example: Bought groceries for the week
  *                 description: Optional detailed description
- *               category_id:
+ *               categoryId:
  *                 type: integer
  *                 example: 1
  *                 description: Category ID (must exist in database)
- *               transaction_date:
+ *               transactionDate:
  *                 type: string
  *                 format: date
  *                 example: 2024-11-23
@@ -261,7 +261,7 @@ router.get("/balance", getBalance);
  *                         type: string
  *                         enum: [income, expense]
  *                         example: expense
- *                       category_id:
+ *                       categoryId:
  *                         type: integer
  *                         example: 1
  *                       total_amount:
@@ -342,10 +342,10 @@ router.get("/:id", getTransaction);
  *                 type: string
  *                 enum: [income, expense]
  *                 example: income
- *               category_id:
+ *               categoryId:
  *                 type: integer
  *                 example: 1
- *               transaction_date:
+ *               transactionDate:
  *                 type: string
  *                 format: date
  *                 example: 2024-11-23
